@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Briefing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,400&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  /* ── AM THEME: pre-landing chaos ─────────────────────────────── */
+  body.am {
+    --ink: #1a2535; --paper: #fdf8f2; --bg: #e4ecf8;
+    --a1: #d4733a; --a2: #5aaa7a; --a3: #c46080;
+    --mu: #7a8fa8; --ru: #c0d0e0;
+    --bar-bg: #1a2535; --bar-t: #a8c8e8;
+    --tl: #5aaa7a; --tg: #d4733a; --why: #c46080;
+    --sr: #1a2535;
+    background: linear-gradient(155deg, #a8c8f0 0%, #c4daf4 20%, #e4ecf8 50%, #f4ede0 100%);
+    color: var(--ink);
+  }
+
+  /* ── PM THEME: cruise altitude, lights dimmed ────────────────── */
+  body.pm {
+    --ink: #dde4f8; --paper: #1a1d38; --bg: #0e1020;
+    --a1: #f2f2c0; --a2: #7060c8; --a3: #4868d0;
+    --mu: #6070a8; --ru: #242848;
+    --bar-bg: #080a18; --bar-t: #8898cc;
+    --tl: #7060c8; --tg: #4868d0; --why: #f2f2c0;
+    --sr: #dde4f8;
+    background: radial-gradient(ellipse at 70% 15%, #1e1848 0%, #0e1020 45%, #06080f 100%);
+    color: var(--ink);
+  }
+
+  body {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+  }
+
+  /* atmospheric glow — AM */
+  body.am::before {
+    content: '';
+    position: fixed;
+    top: -80px; right: -60px;
+    width: 340px; height: 340px;
+    background: radial-gradient(circle, rgba(212,115,58,0.12) 0%, rgba(90,170,122,0.06) 45%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* atmospheric glow — PM */
+  body.pm::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 160px; height: 240px;
+    background: radial-gradient(ellipse at 50% 0%, rgba(242,242,192,0.09) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  body.pm::after {
+    content: '';
+    position: fixed;
+    bottom: 0; right: 0;
+    width: 200px; height: 300px;
+    background: radial-gradient(ellipse at 100% 100%, rgba(112,96,200,0.09) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── MASTHEAD ─────────────────────────────────────────────────── */
+  .masthead {
+    position: relative; z-index: 1;
+    padding: 24px 40px 18px;
+    border-bottom: 3px double var(--ru);
+    display: flex; align-items: flex-end;
+    justify-content: space-between; gap: 20px;
+  }
+
+  .edition-chip {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px; letter-spacing: .18em;
+    text-transform: uppercase; color: var(--a1);
+    margin-bottom: 8px;
+  }
+
+  .masthead-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.2rem, 5vw, 3.6rem);
+    font-weight: 900; letter-spacing: -.02em;
+    line-height: 1; color: var(--ink);
+  }
+
+  .masthead-meta {
+    text-align: right;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px; color: var(--mu); line-height: 1.9;
+  }
+
+  .refresh-btn {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px; letter-spacing: .1em;
+    text-transform: uppercase; padding: 7px 14px;
+    background: transparent; border: 1px solid var(--mu);
+    cursor: pointer; color: var(--mu);
+    transition: all .15s; margin-top: 6px; display: inline-block;
+    border-radius: 0;
+  }
+  .refresh-btn:hover { border-color: var(--ink); color: var(--ink); }
+  .refresh-btn:disabled { opacity: .35; cursor: not-allowed; }
+
+  /* ── EDITION BAR ─────────────────────────────────────────────── */
+  .edition-bar {
+    position: relative; z-index: 1;
+    background: var(--bar-bg); color: var(--bar-t);
+    padding: 7px 40px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px; letter-spacing: .09em;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+
+  /* ── PAGE ────────────────────────────────────────────────────── */
+  .page {
+    position: relative; z-index: 1;
+    max-width: 1200px; margin: 0 auto;
+    padding: 32px 40px 80px;
+  }
+
+  /* ── SECTION HEADERS ─────────────────────────────────────────── */
+  .section-header {
+    display: flex; align-items: center; gap: 12px;
+    margin: 40px 0 18px; padding-bottom: 10px;
+    border-bottom: 1.5px solid var(--sr);
+  }
+
+  .section-tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px; font-weight: 500;
+    letter-spacing: .16em; text-transform: uppercase;
+    padding: 3px 8px; border: 1px solid currentColor;
+  }
+  .section-tag.local  { color: var(--tl); }
+  .section-tag.global { color: var(--tg); }
+
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.2rem; font-weight: 700;
+    color: var(--ink); flex: 1;
+  }
+
+  /* ── SUBSECTION LABELS ───────────────────────────────────────── */
+  .sub-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px; letter-spacing: .13em;
+    text-transform: uppercase; color: var(--mu);
+    margin: 22px 0 12px; padding-bottom: 6px;
+    border-bottom: 1px solid var(--ru);
+  }
+  .sub-label span {
+    background: var(--ink); color: var(--bg);
+    padding: 1px 5px; margin-right: 6px; font-size: 8px;
+  }
+
+  /* ── STORY GRID ──────────────────────────────────────────────── */
+  .stories-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+    gap: 16px;
+  }
+
+  /* ── STORY CARDS ─────────────────────────────────────────────── */
+  .story-card {
+    background: var(--paper); border: 1px solid var(--ru);
+    padding: 16px 18px; transition: border-color .15s;
+  }
+  .story-card:hover { border-color: var(--ink); }
+  .story-card.lead  { border-left: 3px solid var(--a1); }
+
+  .story-card:nth-child(1) .story-scope { color: var(--a1); }
+  .story-card:nth-child(2) .story-scope { color: var(--a2); }
+  .story-card:nth-child(3) .story-scope { color: var(--a3); }
+  .story-card:nth-child(4) .story-scope { color: var(--a1); }
+  .story-card:nth-child(5) .story-scope { color: var(--a2); }
+
+  .story-scope {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 8px; letter-spacing: .13em;
+    text-transform: uppercase; margin-bottom: 6px;
+  }
+
+  .story-headline {
+    font-family: 'Playfair Display', serif;
+    font-size: 1rem; font-weight: 700;
+    line-height: 1.32; color: var(--ink); margin-bottom: 8px;
+  }
+  .story-card.lead .story-headline { font-size: 1.2rem; }
+
+  .story-summary {
+    font-size: .79rem; line-height: 1.6;
+    color: var(--mu); font-weight: 300;
+  }
+
+  .story-why {
+    margin-top: 10px; padding-top: 10px;
+    border-top: 1px dotted var(--ru);
+    font-size: .74rem; color: var(--why);
+    font-style: italic; line-height: 1.5;
+  }
+
+  /* ── DIVIDER ─────────────────────────────────────────────────── */
+  .divider { border: none; border-top: 1px solid var(--ru); margin: 32px 0; }
+
+  /* ── LOADING ─────────────────────────────────────────────────── */
+  .loading-pane {
+    text-align: center; padding: 80px 20px;
+  }
+
+  .loading-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem; font-style: italic;
+    color: var(--mu); margin-bottom: 24px;
+  }
+
+  .progress-bar {
+    width: 220px; height: 1px;
+    background: var(--ru); margin: 0 auto 14px; overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%; background: var(--a1);
+    width: 0%; transition: width .5s ease;
+  }
+
+  .progress-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px; color: var(--mu); letter-spacing: .07em;
+  }
+
+  /* ── ERROR ───────────────────────────────────────────────────── */
+  .error-msg {
+    border: 1px solid var(--ru); padding: 20px 24px;
+    font-size: .85rem; color: var(--mu);
+    margin: 20px 0; background: var(--paper);
+  }
+
+  /* ── MOBILE ──────────────────────────────────────────────────── */
+  @media (max-width: 640px) {
+    .masthead     { padding: 18px 20px 14px; flex-direction: column; gap: 10px; }
+    .masthead-meta { text-align: left; }
+    .edition-bar  { padding: 7px 20px; }
+    .page         { padding: 20px 20px 60px; }
+    .stories-grid { grid-template-columns: 1fr; }
+    .section-header { margin-top: 28px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div>
+    <div class="edition-chip" id="editionChip">—</div>
+    <div class="masthead-title">The Briefing</div>
+  </div>
+  <div class="masthead-meta">
+    <div id="dateline">—</div>
+    <div>Wandsworth · London · UK · World</div>
+    <button class="refresh-btn" id="refreshBtn" onclick="loadBriefing()">↻ New edition</button>
+  </div>
+</header>
+
+<div class="edition-bar">
+  <span id="editionLabel">—</span>
+  <span id="statusLine">Loading…</span>
+</div>
+
+<main class="page" id="mainContent">
+  <div class="loading-pane">
+    <div class="loading-title">Compiling today's edition…</div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-label" id="progressLabel">Starting up</div>
+  </div>
+</main>
+
+<script>
+  // ── EDITION & THEME ───────────────────────────────────────────────
+  const hour    = new Date().getHours();
+  const edition = hour < 13 ? 'AM' : 'PM';
+  document.body.classList.add(edition.toLowerCase());
+
+  const today  = new Date();
+  const dateStr = today.toLocaleDateString('en-GB', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+  });
+
+  document.getElementById('dateline').textContent    = dateStr.toUpperCase();
+  document.getElementById('editionChip').textContent = edition === 'AM' ? '☀ Morning edition' : '◑ Evening edition';
+  document.getElementById('editionLabel').textContent = edition === 'AM'
+    ? 'AM EDITION · WHAT BROKE OVERNIGHT · WHAT TO WATCH TODAY'
+    : 'PM EDITION · HOW TODAY DEVELOPED · WHAT TO SIT WITH OVERNIGHT';
+
+  // ── LOAD ──────────────────────────────────────────────────────────
+  async function loadBriefing() {
+    const btn    = document.getElementById('refreshBtn');
+    const status = document.getElementById('statusLine');
+    const main   = document.getElementById('mainContent');
+    btn.disabled = true;
+
+    main.innerHTML = `
+      <div class="loading-pane">
+        <div class="loading-title">Compiling today's edition…</div>
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="progress-label" id="progressLabel">Searching current news</div>
+      </div>`;
+
+    const steps = [
+      [18,  'Searching Wandsworth & London…'],
+      [38,  'Searching UK headlines…'],
+      [55,  'Searching US & Europe…'],
+      [72,  'Searching Tech, AI & Faith…'],
+      [88,  'Composing edition…'],
+    ];
+    let si = 0;
+    const ticker = setInterval(() => {
+      if (si < steps.length) {
+        const [pct, label] = steps[si++];
+        const f = document.getElementById('progressFill');
+        const l = document.getElementById('progressLabel');
+        if (f) f.style.width = pct + '%';
+        if (l) l.textContent = label;
+      }
+    }, 2500);
+
+    status.textContent = 'Fetching…';
+
+    try {
+      const res = await fetch('/api/briefing', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ edition, dateStr }),
+      });
+
+      clearInterval(ticker);
+      const f2 = document.getElementById('progressFill');
+      if (f2) f2.style.width = '100%';
+
+      if (!res.ok) {
+        const err = await res.text();
+        throw new Error(`Server error ${res.status}: ${err.slice(0, 200)}`);
+      }
+
+      const briefing = await res.json();
+      if (briefing.error) throw new Error(briefing.error);
+
+      render(briefing);
+      status.textContent = `Updated ${new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}`;
+
+    } catch (err) {
+      clearInterval(ticker);
+      main.innerHTML = `
+        <div class="error-msg">
+          <strong>Edition failed to load.</strong><br>${err.message}
+          <br><br><button class="refresh-btn" onclick="loadBriefing()">Try again</button>
+        </div>`;
+      status.textContent = 'Error';
+    }
+
+    btn.disabled = false;
+  }
+
+  // ── RENDER ────────────────────────────────────────────────────────
+  function render(data) {
+    const main = document.getElementById('mainContent');
+    const isAM = edition === 'AM';
+    let h = '';
+
+    h += secHead('local',  'LOCAL',  'Wandsworth · London · United Kingdom');
+    h += subHead('NEED TO KNOW', isAM ? 'Stories moving right now' : "How today's stories resolved");
+    h += grid(data.local?.need_to_know  || [], true);
+    h += subHead('WILL MATTER', 'Slower burn — worth tracking');
+    h += grid(data.local?.will_matter   || []);
+
+    h += '<hr class="divider">';
+
+    h += secHead('global', 'GLOBAL', 'US · Europe · Tech & AI · Faith');
+    h += subHead('NEED TO KNOW', isAM ? "The world's dominant stories today" : 'What developed since this morning');
+    h += grid(data.global?.need_to_know || [], true);
+    h += subHead('WILL MATTER', 'What most feeds are missing');
+    h += grid(data.global?.will_matter  || []);
+
+    main.innerHTML = h;
+  }
+
+  function secHead(cls, tag, title) {
+    return `<div class="section-header">
+      <span class="section-tag ${cls}">${tag}</span>
+      <span class="section-title">${title}</span>
+    </div>`;
+  }
+
+  function subHead(label, desc) {
+    return `<div class="sub-label"><span>${label}</span>${desc}</div>`;
+  }
+
+  function grid(stories, hasLead = false) {
+    if (!stories.length) return '<p style="color:var(--mu);font-size:.82rem;margin-bottom:16px">No stories found.</p>';
+    let h = '<div class="stories-grid">';
+    stories.forEach((s, i) => {
+      const cls = hasLead && i === 0 ? 'story-card lead' : 'story-card';
+      h += `<div class="${cls}">
+        <div class="story-scope">${s.scope || ''}</div>
+        <div class="story-headline">${s.headline || ''}</div>
+        <div class="story-summary">${s.summary || ''}</div>
+        ${s.why ? `<div class="story-why">⊕ ${s.why}</div>` : ''}
+      </div>`;
+    });
+    return h + '</div>';
+  }
+
+  loadBriefing();
+</script>
+</body>
+</html>
