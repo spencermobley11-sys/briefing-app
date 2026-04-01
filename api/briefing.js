@@ -1,6 +1,19 @@
-export const config = { runtime: 'edge' };
+module.exports = async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-const SYSTEM = `You are a sharp, independent news editor curating a daily briefing for a 28-year-old American living in Earlsfield, Wandsworth, London. He values clear thinking, non-sensationalist writing, stories that matter beyond today's noise, and coverage that respects his intelligence.
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  const { edition, dateStr } = req.body;
+
+  const SYSTEM = `You are a sharp, independent news editor curating a daily briefing for a 28-year-old American living in Earlsfield, Wandsworth, London. He values clear thinking, non-sensationalist writing, stories that matter beyond today's noise, and coverage that respects his intelligence.
 
 Produce ONLY valid JSON — no markdown, no backticks, no preamble — in exactly this shape:
 {
@@ -31,23 +44,6 @@ Rules:
 - why: 1-2 sentences. The editorial take.
 - British editorial style. No sensationalism. No passive voice. No "it remains to be seen".`;
 
-export default async function handler(req) {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, {
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type',
-      },
-    });
-  }
-
-  if (req.method !== 'POST') {
-    return new Response('Method not allowed', { status: 405 });
-  }
-
-  const { edition, dateStr } = await req.json();
-
   const editionInstruction = edition === 'AM'
     ? 'MORNING EDITION: reader is starting their day. Prioritise overnight breaks, what to watch today, context for ongoing stories. Tone: clear-headed, energising.'
     : 'EVENING EDITION: reader is ending their day. Prioritise what developed today, what was underreported, what is worth sitting with overnight. Tone: reflective, considered.';
@@ -61,7 +57,6 @@ export default async function handler(req) {
         'Content-Type': 'application/json',
         'x-api-key': process.env.ANTHROPIC_API_KEY,
         'anthropic-version': '2023-06-01',
-        'anthropic-beta': 'interleaved-thinking-2025-05-14',
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
@@ -74,10 +69,7 @@ export default async function handler(req) {
 
     if (!response.ok) {
       const err = await response.text();
-      return new Response(JSON.stringify({ error: err }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
-      });
+      return res.status(500).json({ error: err });
     }
 
     const data = await response.json();
@@ -89,14 +81,8 @@ export default async function handler(req) {
     const clean = text.replace(/```json|```/g, '').trim();
     const briefing = JSON.parse(clean);
 
-    return new Response(JSON.stringify(briefing), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
-    });
+    return res.status(200).json(briefing);
   } catch (err) {
-    return new Response(JSON.stringify({ error: err.message }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
-    });
+    return res.status(500).json({ error: err.message });
   }
-}
+};
