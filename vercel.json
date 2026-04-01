@@ -1,11 +1,6 @@
 {
-  "version": 2,
-  "builds": [
-    { "src": "public/index.html", "use": "@vercel/static" },
-    { "src": "api/briefing.js",   "use": "@vercel/edge" }
-  ],
-  "routes": [
-    { "src": "/api/briefing", "dest": "/api/briefing.js" },
-    { "src": "/(.*)",         "dest": "/public/index.html" }
+  "rewrites": [
+    { "source": "/api/briefing", "destination": "/api/briefing.js" },
+    { "source": "/(.*)", "destination": "/public/index.html" }
   ]
 }
