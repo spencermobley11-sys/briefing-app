@@ -288,7 +288,7 @@
 <script>
   // ── EDITION & THEME ───────────────────────────────────────────────
   const hour    = new Date().getHours();
-  const edition = hour < 13 ? 'AM' : 'PM';
+  const edition = hour < 17 || (hour === 17 && new Date().getMinutes() < 30) ? 'AM' : 'PM';
   document.body.classList.add(edition.toLowerCase());
 
   const today  = new Date();
